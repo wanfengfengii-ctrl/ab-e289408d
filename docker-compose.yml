@@ -1,0 +1,26 @@
+# 宿主机暴露端口可用环境变量 HOST_PORT 配置，默认 8080：
+#   HOST_PORT=9000 docker compose up -d
+services:
+  web:
+    build:
+      context: .
+      target: runtime
+    image: star-tracker-review:latest
+    ports:
+      - "${HOST_PORT:-8080}:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  # 一次性审核：运行单元测试与生产构建，完成后自行退出，退出码报告结果。
+  # 用法：docker compose run --rm verify
+  verify:
+    build:
+      context: .
+      target: verify
+    image: star-tracker-review-verify:latest
+    restart: "no"
